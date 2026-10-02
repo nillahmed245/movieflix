@@ -1,0 +1,435 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile document storing account information and user role",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "User ID matching Firebase Auth UID",
+          "maxLength": 128
+        },
+        "id": {
+          "type": "string",
+          "description": "Legacy ID alias matching UID",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address",
+          "maxLength": 256
+        },
+        "username": {
+          "type": "string",
+          "description": "Unique or display username chosen by user",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name alias",
+          "maxLength": 100
+        },
+        "avatar": {
+          "type": "string",
+          "description": "Avatar image URL",
+          "maxLength": 1024
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Legacy photoURL alias",
+          "maxLength": 1024
+        },
+        "role": {
+          "type": "string",
+          "description": "User role: 'user' or 'admin'",
+          "enum": ["user", "admin"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the user account was created"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the user account was last updated"
+        }
+      },
+      "required": ["uid", "email", "role", "createdAt"]
+    },
+    "Movie": {
+      "title": "Movie",
+      "description": "Movie title metadata, trailers, and streaming source references",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique movie identifier",
+          "maxLength": 64
+        },
+        "title": {
+          "type": "string",
+          "description": "Movie title",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "tagline": {
+          "type": "string",
+          "description": "Short catchy promotional tagline",
+          "maxLength": 250
+        },
+        "poster": {
+          "type": "string",
+          "description": "Poster image URL",
+          "maxLength": 1024
+        },
+        "backdrop": {
+          "type": "string",
+          "description": "Backdrop image URL",
+          "maxLength": 1024
+        },
+        "description": {
+          "type": "string",
+          "description": "Short synopsis description",
+          "maxLength": 2000
+        },
+        "fullDescription": {
+          "type": "string",
+          "description": "Detailed movie overview synopsis",
+          "maxLength": 3000
+        },
+        "genre": {
+          "type": "string",
+          "description": "Primary genre classification",
+          "maxLength": 64
+        },
+        "genres": {
+          "type": "array",
+          "description": "Array of assigned genres"
+        },
+        "year": {
+          "type": "integer",
+          "description": "Release year"
+        },
+        "runtime": {
+          "type": "string",
+          "description": "Formatted duration string",
+          "maxLength": 32
+        },
+        "runtimeMinutes": {
+          "type": "integer",
+          "description": "Duration in total minutes"
+        },
+        "rating": {
+          "type": "number",
+          "description": "Viewer/critic rating score out of 10"
+        },
+        "certification": {
+          "type": "string",
+          "description": "Film rating certificate e.g. PG-13, R",
+          "maxLength": 16
+        },
+        "language": {
+          "type": "string",
+          "description": "Audio language",
+          "maxLength": 64
+        },
+        "director": {
+          "type": "string",
+          "description": "Director name",
+          "maxLength": 128
+        },
+        "cast": {
+          "type": "array",
+          "description": "Featured cast members"
+        },
+        "trailerEmbedUrl": {
+          "type": "string",
+          "description": "Official studio trailer embed URL",
+          "maxLength": 1024
+        },
+        "trailerUrl": {
+          "type": "string",
+          "description": "Alternative trailer URL",
+          "maxLength": 1024
+        },
+        "videoUrl": {
+          "type": "string",
+          "description": "Licensed or public-domain video stream URL",
+          "maxLength": 1024
+        },
+        "isLegalFullStream": {
+          "type": "boolean",
+          "description": "Indicates if full legal stream is available"
+        },
+        "streamSourceLabel": {
+          "type": "string",
+          "description": "Public domain or open source archive label",
+          "maxLength": 128
+        },
+        "likes": {
+          "type": "integer",
+          "description": "Aggregated count of user likes"
+        },
+        "views": {
+          "type": "string",
+          "description": "Display count of views",
+          "maxLength": 32
+        },
+        "trending": {
+          "type": "boolean",
+          "description": "Flag for trending carousel"
+        },
+        "popular": {
+          "type": "boolean",
+          "description": "Flag for popular row"
+        },
+        "featured": {
+          "type": "boolean",
+          "description": "Flag for hero banner highlight"
+        },
+        "latest": {
+          "type": "boolean",
+          "description": "Flag for latest releases row"
+        },
+        "status": {
+          "type": "string",
+          "description": "Publication status: published or draft",
+          "enum": ["published", "draft"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["title", "genre", "year", "rating", "status", "createdAt"]
+    },
+    "Genre": {
+      "title": "Genre",
+      "description": "Movie category classification and curated artwork",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Genre name",
+          "minLength": 2,
+          "maxLength": 64
+        },
+        "description": {
+          "type": "string",
+          "description": "Genre description",
+          "maxLength": 500
+        },
+        "image": {
+          "type": "string",
+          "description": "Cover image URL",
+          "maxLength": 1024
+        },
+        "color": {
+          "type": "string",
+          "description": "Tailwind color gradient class",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["name", "createdAt"]
+    },
+    "AdminLog": {
+      "title": "AdminLog",
+      "description": "Audit record of sensitive administrator operations",
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "Action performed, e.g. movie_created, comment_deleted",
+          "maxLength": 128
+        },
+        "adminUid": {
+          "type": "string",
+          "description": "Administrator UID",
+          "maxLength": 128
+        },
+        "adminEmail": {
+          "type": "string",
+          "description": "Administrator email address",
+          "maxLength": 256
+        },
+        "targetId": {
+          "type": "string",
+          "description": "ID of resource modified or removed",
+          "maxLength": 128
+        },
+        "targetType": {
+          "type": "string",
+          "description": "Type of resource, e.g. movie, comment, user, genre",
+          "maxLength": 64
+        },
+        "details": {
+          "type": "string",
+          "description": "Optional action notes or description",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["action", "adminUid", "adminEmail", "createdAt"]
+    },
+    "WatchlistItem": {
+      "title": "WatchlistItem",
+      "description": "A movie added to a user's personal watchlist",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner user ID",
+          "maxLength": 128
+        },
+        "movieId": {
+          "type": "string",
+          "description": "ID of the movie",
+          "maxLength": 64
+        },
+        "movieTitle": {
+          "type": "string",
+          "description": "Title of the movie for instant offline/list rendering",
+          "maxLength": 256
+        },
+        "moviePoster": {
+          "type": "string",
+          "description": "Poster image URL",
+          "maxLength": 1024
+        },
+        "movieYear": {
+          "type": "integer",
+          "description": "Release year of the movie"
+        },
+        "movieRating": {
+          "type": "number",
+          "description": "Rating of the movie"
+        },
+        "movieGenre": {
+          "type": "string",
+          "description": "Primary genre name",
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["userId", "movieId", "movieTitle", "createdAt"]
+    },
+    "MovieLike": {
+      "title": "MovieLike",
+      "description": "Tracks a user's like on a specific movie",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner user ID",
+          "maxLength": 128
+        },
+        "movieId": {
+          "type": "string",
+          "description": "Movie ID",
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["userId", "movieId", "createdAt"]
+    },
+    "MovieComment": {
+      "title": "MovieComment",
+      "description": "A user-submitted review or comment on a movie",
+      "type": "object",
+      "properties": {
+        "movieId": {
+          "type": "string",
+          "description": "ID of the movie commented on",
+          "maxLength": 64
+        },
+        "userId": {
+          "type": "string",
+          "description": "Author user ID",
+          "maxLength": 128
+        },
+        "userName": {
+          "type": "string",
+          "description": "Display name of the author",
+          "maxLength": 100
+        },
+        "userAvatar": {
+          "type": "string",
+          "description": "Avatar URL of author",
+          "maxLength": 1024
+        },
+        "content": {
+          "type": "string",
+          "description": "Comment text body",
+          "minLength": 2,
+          "maxLength": 500
+        },
+        "reportCount": {
+          "type": "integer",
+          "description": "Number of times this comment was reported"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["movieId", "userId", "userName", "content", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Stores user account profile information"
+    },
+    "/movies/{movieId}": {
+      "schema": "Movie",
+      "description": "Stores movie catalog entries managed by admins"
+    },
+    "/genres/{genreId}": {
+      "schema": "Genre",
+      "description": "Stores movie categories managed by admins"
+    },
+    "/adminLogs/{logId}": {
+      "schema": "AdminLog",
+      "description": "Stores security audit log for admin operations"
+    },
+    "/watchlist/{watchId}": {
+      "schema": "WatchlistItem",
+      "description": "Collection of movies bookmarked by users"
+    },
+    "/likes/{likeId}": {
+      "schema": "MovieLike",
+      "description": "Collection of user likes for movies"
+    },
+    "/comments/{commentId}": {
+      "schema": "MovieComment",
+      "description": "Public comments left by users on movie titles"
+    }
+  }
+}

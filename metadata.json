@@ -1,0 +1,6 @@
+{
+  "name": "MovieFlix - Premium Movies & Trailers",
+  "description": "Explore trending movies, watch official trailers, discover cinema by genre, and track your personal watchlist with MovieFlix.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

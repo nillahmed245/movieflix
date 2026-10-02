@@ -1,0 +1,181 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Cryptographically verified Admin authority (Root Bootstrapped Admin & Role verification)
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == "md3048284@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin")
+      );
+    }
+
+    function isValidUserProfileCreate(data, userId) {
+      return data.keys().hasAll(['email', 'createdAt']) &&
+             data.keys().hasOnly(['uid', 'id', 'username', 'displayName', 'email', 'avatar', 'photoURL', 'role', 'createdAt', 'updatedAt']) &&
+             (!('uid' in data) || (data.uid is string && data.uid == userId)) &&
+             (!('id' in data) || (data.id is string && data.id == userId)) &&
+             data.email is string && data.email.size() <= 256 &&
+             // Normal users must receive role == 'user'; bootstrapped admin email can initialize as admin
+             (!('role' in data) || data.role == 'user' || (request.auth.token.email == "md3048284@gmail.com" && data.role == 'admin')) &&
+             (!('username' in data) || (data.username is string && data.username.size() >= 2 && data.username.size() <= 60)) &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+             (!('avatar' in data) || (data.avatar is string && data.avatar.size() <= 1024)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 1024));
+    }
+
+    function isValidUserProfileUpdate(data, userId) {
+      return isValidUserProfileCreate(data, userId) &&
+             // Prevent role escalation, uid change, email change, and createdAt tampering by non-admin
+             (!('role' in existing()) || data.role == existing().role) &&
+             (!('uid' in existing()) || data.uid == existing().uid) &&
+             (!('id' in existing()) || data.id == existing().id) &&
+             data.email == existing().email &&
+             data.createdAt == existing().createdAt;
+    }
+
+    function isValidUserProfileAdminUpdate(data) {
+      return (!('role' in data) || data.role in ['user', 'admin']);
+    }
+
+    function isValidMovie(data) {
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             data.poster is string && data.poster.size() >= 5 && data.poster.size() <= 1024 &&
+             (!('backdrop' in data) || (data.backdrop is string && data.backdrop.size() <= 1024)) &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
+             (!('fullDescription' in data) || (data.fullDescription is string && data.fullDescription.size() <= 3000)) &&
+             data.genre is string && data.genre.size() >= 2 && data.genre.size() <= 64 &&
+             data.year is int && data.year >= 1888 && data.year <= 2100 &&
+             data.rating is number && data.rating >= 0 && data.rating <= 10 &&
+             (!('runtime' in data) || (data.runtime is string && data.runtime.size() <= 32)) &&
+             (!('language' in data) || (data.language is string && data.language.size() <= 64)) &&
+             (!('director' in data) || (data.director is string && data.director.size() <= 128)) &&
+             (!('status' in data) || data.status in ['published', 'draft']) &&
+             (!('trailerEmbedUrl' in data) || (data.trailerEmbedUrl is string && data.trailerEmbedUrl.size() <= 1024)) &&
+             (!('trailerUrl' in data) || (data.trailerUrl is string && data.trailerUrl.size() <= 1024)) &&
+             (!('videoUrl' in data) || (data.videoUrl is string && data.videoUrl.size() <= 1024)) &&
+             (!('likes' in data) || (data.likes is int && data.likes >= 0));
+    }
+
+    function isValidGenre(data) {
+      return data.name is string && data.name.size() >= 2 && data.name.size() <= 64 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 500)) &&
+             (!('image' in data) || (data.image is string && data.image.size() <= 1024)) &&
+             (!('color' in data) || (data.color is string && data.color.size() <= 128));
+    }
+
+    function isValidWatchlistItem(data) {
+      return data.keys().hasAll(['userId', 'movieId', 'movieTitle', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'movieId', 'movieTitle', 'moviePoster', 'movieYear', 'movieRating', 'movieGenre', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.movieId is string && data.movieId.size() <= 64 &&
+             data.movieTitle is string && data.movieTitle.size() <= 256 &&
+             (!('moviePoster' in data) || (data.moviePoster is string && data.moviePoster.size() <= 1024)) &&
+             (!('movieYear' in data) || (data.movieYear is int)) &&
+             (!('movieRating' in data) || (data.movieRating is number)) &&
+             (!('movieGenre' in data) || (data.movieGenre is string && data.movieGenre.size() <= 64));
+    }
+
+    function isValidLike(data) {
+      return data.keys().hasAll(['userId', 'movieId', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'movieId', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.movieId is string && data.movieId.size() <= 64;
+    }
+
+    function isValidComment(data) {
+      return data.keys().hasAll(['movieId', 'userId', 'userName', 'content', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'movieId', 'userId', 'userName', 'userAvatar', 'content', 'reportCount', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.movieId is string && data.movieId.size() <= 64 &&
+             data.userName is string && data.userName.size() <= 100 &&
+             data.content is string && data.content.size() >= 2 && data.content.size() <= 500 &&
+             (!('userAvatar' in data) || (data.userAvatar is string && data.userAvatar.size() <= 1024)) &&
+             (!('reportCount' in data) || (data.reportCount is int && data.reportCount >= 0));
+    }
+
+    // User profiles: owner read/write, admin manage & list
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUserProfileCreate(incoming(), userId);
+      allow update: if (
+        isSignedIn() && request.auth.uid == userId && 
+        isValidUserProfileUpdate(incoming(), userId) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['username', 'displayName', 'avatar', 'photoURL', 'updatedAt'])
+      ) || (isAdmin() && isValidUserProfileAdminUpdate(incoming()));
+      allow delete: if isAdmin();
+    }
+
+    // Movies catalog: public read, strictly admin create/update/delete with data validation
+    match /movies/{movieId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidId(movieId) && isValidMovie(incoming());
+      allow delete: if isAdmin() && isValidId(movieId);
+    }
+
+    // Genres catalog: public read, strictly admin create/update/delete with data validation
+    match /genres/{genreId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidId(genreId) && isValidGenre(incoming());
+      allow delete: if isAdmin() && isValidId(genreId);
+    }
+
+    // Admin Audit Logs: strictly admin read/create, immutable
+    match /adminLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() && isValidId(logId) && incoming().adminUid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Watchlist items: strictly read/write by owner
+    match /watchlist/{watchId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(watchId) && incoming().userId == request.auth.uid && isValidWatchlistItem(incoming());
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // Movie likes: public read, owner create/delete
+    match /likes/{likeId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidId(likeId) && incoming().userId == request.auth.uid && isValidLike(incoming());
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // Movie comments: public read, authenticated author create/update/delete, community reporting, admin moderation
+    match /comments/{commentId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidId(commentId) && incoming().userId == request.auth.uid && isValidComment(incoming());
+      allow update: if (
+        (isSignedIn() && resource.data.userId == request.auth.uid && isValidComment(incoming()) && incoming().diff(existing()).affectedKeys().hasOnly(['content'])) ||
+        (incoming().diff(existing()).affectedKeys().hasOnly(['reportCount']) && incoming().reportCount == existing().reportCount + 1) ||
+        isAdmin()
+      );
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+  }
+}
